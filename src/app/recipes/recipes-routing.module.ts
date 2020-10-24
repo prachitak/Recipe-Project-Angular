@@ -9,7 +9,7 @@ import { RecipesComponent } from './recipes.component';
 
 
 const routes: Routes = [
-    {   path: 'recipes', 
+    {   path: '', //path is blank as it is loaded lazily and this path is appended to what we have define in app-routing.module.js
         component: RecipesComponent, 
         canActivate: [AuthGuard],
         children: [

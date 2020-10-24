@@ -1,12 +1,21 @@
 # RecipeProject
 
-
-There are 3 feature modules -
+In Recipe Project, there are 3 feature modules -
 1. Recipes module
 2. Shopping list module
-3. Auth module
+3. Auth Module
 
+There is 1 shared module having below -
+1. AlertComponent,
+2. LoadingSpinnerComponent,
+3. PlaceHolderDirective,
+4. DropdownDirective,
+5. CommonModule
 
+There is 1 core module having below -
+1. ShoppingListService, 
+2. RecipeService,
+3. AuthInterceptor
 
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.6.
