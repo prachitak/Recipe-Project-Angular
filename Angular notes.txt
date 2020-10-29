@@ -11,7 +11,6 @@ Upgrade local angular CLI to latest version ->
 cd project directory
 ng update @angular/cli
 
-
 -----------------------------------------------
 create new angular project ->
 go to required directory
@@ -3667,11 +3666,324 @@ add below to ngsw-config.json file after assetGroups[]
 Now we should be able to see all the dynamic data even when browser is offline or we turn off our system's internet connectivity
 ---------------------------------------------------------------------------------------------------
 
+Angular as a Platform & Closer Look at the CLI
+
+ng new --help
+
+------
+IDE & Project Setup:
+
+File -> Preferences -> keyboard shortcuts
+add "Angular Essentials (Version 9)" VScode extention by John Papa (do add .prettierrc file to code)
+------
+
+Understanding the Config Files:
+
+.editorconfig -> 
+automatically created. It is used by code editor to configure how code should look. The config in this file overrides default code editor 	config.This does not affect angular code / behaviour.
+
+.prettierrc-> 
+manually created. It is used with "Angular Essentials (Version 9)" VScode extention.
+
+.gitignore ->
+to ignore commiting some kind of files to git
+
+.browserslistrc -> 
+used by angular CLI when you build application for production
+list all the browsers that app should use.
+this information is needed by CLI so that it can it can certain browser specific adjustments.
+ex - adjusting CSS and prefixing it for specific browser
+	to load correct polyfills and to create correct code bundles that include those polyfills
+
+karma.conf.js ->
+used for unit testing. Angular uses karma for testing.
+This file defines how angular test cases should be executed. 
+
+package-lock.json ->
+created based on package.json
+
+package.json -> 
+manages which packages and what versions of them are used by the project.
+dependencies -> third party packages that project is using
+devDependencies -> packages used only to build the project and it will not be part of running application
+when we run 'npm install' command, the dependencies get added to 'node_modules' folder. Also, exact version of those dependencies get added to package-lock.json.
+
+package.json -> we just specify min requirement for dependency version
+package-lock.json -> constains exact version of dependency version
+
+tsconfig.json ->
+Base configuration file which configures typescipt compiler. 
+we can add "angularCompilerOptions" flag as well to configure angular compiler
+
+tsconfig.app.json ->
+extends tsconfig.json for actual application
+
+tsconfig.spec.json ->
+extends tsconfig.json for testing
+
+tslint.json ->
+configuration for linting which checks code quality and code standards
+
+-------
+
+Imp CLI commands:
+
+ng help
+ng <command> --help
+	ex-> ng generate --help
+		 ng gnerate component --help
+ng serve
+ng lint
+ng build --prod
+
+------
+
+Closer look at angular.json file ->
+
+This file is used by CLI to run different CLI commands. This file tells angular how to run those CLI commands.
+The default flag values of CLI commnands are stored in angular.json file which otherwise we will have to provie to CLI commnands.
+
+newProjectRoot -> all the projects within this project. By default we just have 1 but there can be many projects under one project.
+projects -> all the projects within newProjectRoot
+defaultProject -> default project from all projects, where all angular CLI commnds will run
+
+Project level config :
+prefix -> to be appended before each component selector etc. (default - app)
+architect -> we can give configuarations for different CLI commands
+
+Architect level config:
+options -> to set default flag congif for any CLI command
+configurations -> to set environment specific flags (overrides flag settings from options{})
+RecipeProject:build -> to reuse RecipeProject:build config
+RecipeProject:build:production -> to reuse RecipeProject:build:production config
+assets -> images etc. that should be part of build and deployed to production
+
+----------
+
+Angular Schematics:
+
+Schematics are the blueprints which certain angular commands can pick up and do something.
+
+Angular schematics ->
+ex - 
+ng generate
+ng add
+ng update
+
+Custom Schematics ->
+We/third-party libraries can create own custom schematics.
+Angular material is a 3rd party library which supports ng add, ng generate schematics.
+ex-  
+ng add @angular/material
+ng generate @angular/material:nav main-nav  -> creates angular material component with name main-nav 
+
+----------
+
+Smooth updating of projects with ng update -> 
+
+This schematic analyses package.json file and tells if there is any package for which an update is available. 
+If update is available, we can then run "ng update @angular/core" or "ng update @angular/cli" etc  to update that specific package.
+
+Whenever we have new angular version/ package version, we can run this command for smooth updating of our project.
+
+----------
+
+Builders ->
+
+Angular built-in builders ->
+ng build -> performs certain build steps
+ng test -> performs certain build steps
+ng lint -> performs certain build steps
+ng deploy -> performs certain build and deployment steps
+
+All above commands can be customised. Alternatively, we can write our own custom builders as well.
+
+----------
+
+Simplified deployment with ng deploy ->
+
+npm install -g firebase-tools
+firebase login
+ng add @angular/fire
+ng deploy (it automatically builds in production mode and then deploy to firebase)
+For redeployment, again use -> ng deploy
+
+-----------
+
+Understanding "Differential Loading" ->
+
+Angular needs .browserslistrc file to have for a list of all the suported browsers to do below:
+auto prefix CSS code
+determine which polyfills to load
+determine which different versions of bundles to generate
+
+polyfills -> adds certain feature to browser
+
+ex - 
+User A use modern browser and thus need no or less polyfills, so smaller code bundle needed
+User B use legacy browser and thus need all or more polyfills, so bigger code bundle needed
+
+What differetial loading does ->
+Angular CLI creates different versions of applications (when it builds for production) as per browser's requirement.
+When we build for production, a small initial code file is created which runs first when user visits the page to determine which browser user is using. 
+Then this small initial code file determines which code bundle is served to the user.
+
+Thus, user A hass to download less code than user B.
+
+If we see dist/project folder, we can 2 versions of each file as below - 
+main-es5.d25e75421d6a3eb62a98.js
+main-es2015.d25e75421d6a3eb62a98.js
+polyfills-es5.3f2ca53344aa95d65168.js
+polyfills-es2015.6bf73d3a10175ad447b3.js
+runtime-es5.19890482efeb22265d77.js
+runtime-es2015.19890482efeb22265d77.js
+
+es5 -> is for legacy browser
+es2015 -> is for modern browser
+We specify the "es" verion in tsconfig.json -> "target": "es2015" 
+
+These are the files that we deploy and they execute automatically.
+If we see index.html, it first execute runtime<version>.js , then it decides which other main.js and polyfills.js files needs to be loaded.
+
+--------
+
+Managing Multiple Projects in One Folder ->
+
+cd <project_folder>
+ng generate application backend  
+creates a new project inside main project, it is new separate angular application (not cleaner as one project code is put inside main project folder)
+
+cleaner approach for multiple projects:
+cd <project_folder>/..
+ng new angular-shop --create-application=false -> just created config file, no app folder
+cd <project_folder>
+ng generate application backend -> now creates application code inside "Project" folder
+
+Serve the project:
+ng serve --project=backend 
+or
+set that project as default project in angular.json under -> "defaultProject": "backend"
+
+----------
+
+Angular Libraries 
+
+ng generate library my-button 
+
+Library is not meant for running as standalone web application but it is meant have some code to be shared across multiple angular web applications.
+
+-------------------------------------------------------------------------------------------------
+
+Angular elements:
+
+It is a feature of angular framework which allows us turn normal angular component into native web component.
+Web components are custom HTML elements which are part of DOM or javascript. They are not related to Angular and can be used by vanilla javascript apps or apps built with other frameworks.
+
+At the time this course was prepared (when angular 6 was released), angular elements are usable only in angular projects.
+It helps to load dynamic data. Allows us to dynamically insert HTML code holding angular components after the angular app has been compiled and loaded.
+
+scenario - when HTML code is coming from some other application/service
+-----------
+
+Use case -> Angular does not render <app-alert message='My message'></app-alert> in UI
+
+app.component.ts ->
+
+export class AppComponent {
+  content = null;
+
+  constructor() {
+    setTimeout(() => {
+      this.content = "<app-alert message='My message'></app-alert>";
+    }, 1000);
+  }
+}
+
+app.component.HTML ->
+<div [innerHTML]="content"></div>
+
+----------
+Solving it with Angular elements ->
+
+Prerequisite:
+ng add @angular/elements
+
+export class AppComponent {
+  content = null;
+
+  constructor(injector: Injector, domSanitizer: DomSanitizer) {
+
+    const alertElement  = createCustomElement(AlertComponent, {injector: injector});
+    customElements.define('my-alert', alertElement);
+
+    setTimeout(() => {
+      this.content = domSanitizer.bypassSecurityTrustHtml("<my-alert message='My message'></my-alert>");
+    }, 1000);
+  }
+}
+
+app.component.HTML ->
+<div [innerHTML]="content"></div>
 
 
+Explanation:
 
+injector -> To inject the dependencies to AlertComponent. This is the same way what angular does internally while creating any componenet.
+			We are doing it manually as we are creating a custom element.
+			
+customElements.define() -> It is not angular specific method. It is javascript specific method to register a custom element.
 
+We get below warning ->
+WARNING: sanitizing HTML stripped some content, see http://g.co/ng/security#xss _sanitizeHtml @ core.js:5016
+This is because we are trying to insert some HTML content in below manner using innerHTML.
+<div [innerHTML]="content"></div>
+This is risky and generally used in cross site scripting.
+But as we know we are here doing safe operation, we can avoid this warning using DomSanitizer. -> domSanitizer.bypassSecurityTrustHtml();
 
+Add below in app.module.ts only if you are getting error ->
+entryComponents: [AlertComponent]
+entryComponents[] in app.module.ts -> components that we do not use via its selector or routing, but eventually use via some other way. Here, via a custom HTML element.
 
+----------------------------------------------------------------------------------------------------
 
+Typescript:
 
+It is superset of javascript. It is internally coneverted to javascript.
+In typescript, we can create a variable and then assign it a number, then reassign string to same variable, then reassign boolean to same variable.
+This is not possible in javascript which is a good thing. It makes code less error prone.
+
+typescipt has additional features like classes (‘class’ keyword), interfaces, generics and modules. Javascript does not have it.
+------------
+
+Type checking:
+Javascript does not have interface, typescipt has it.
+
+typescipt type checking ->
+
+let str1: string;		//type string is assigned to str1
+str1 = 'abc'; 			//allowed
+str1 = 2;				//not allowed
+
+let str2: 'Hi...';		//type string is assigned to str2
+str2 = 'abc'; 			//allowed
+str2 = 2;				//not allowed
+
+let str3;				//type any is assigned to str3
+str3 = 'abc'; 			//allowed
+str3 = 2;				//allowed
+
+----------
+Interface:
+Javascript does not have interface, typescipt has it.
+
+typescipt interface ->
+			
+interface MyInterace {
+	username: string;
+	password: string;
+	confirmPassword?: string;	//Optional property. Does not have to be implemented
+}
+
+let user: User; 	//can be used to create type of variable
+user = {username: 'Prachi', password: 'pass123'}
+-----------
